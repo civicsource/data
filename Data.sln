@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{DA075EBF-CA8C-4233-8014-0B384A84AB9F}"
+	ProjectSection(SolutionItems) = preProject
+		common.targets = common.targets
+		README.md = README.md
+		teamcity.targets = teamcity.targets
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{E54043C0-D534-40E3-8E20-462296912814}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E54043C0-D534-40E3-8E20-462296912814}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E54043C0-D534-40E3-8E20-462296912814}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E54043C0-D534-40E3-8E20-462296912814}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E54043C0-D534-40E3-8E20-462296912814}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
