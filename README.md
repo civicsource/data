@@ -6,7 +6,7 @@
 
 ### Install via Nuget
 
-Make sure you have the [Archon nuget repository](https://github.com/civicsource/first-time-setup#archon-nuget-feed) configured in Visual Studio.
+Make sure you have the [Archon nuget repository](https://github.com/civicsource/first-time-setup#civicsource-nuget-feeds) configured in Visual Studio.
 
 ```
 install-package Archon.Data
