@@ -11,22 +11,25 @@ namespace Archon.Data
 {
 	public class Database
 	{
+		static readonly Regex goEx = new Regex(@"^\s*go\s*$", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+		readonly Assembly ass;
 		readonly string[] createSql;
 		readonly string[] clearSql;
-		readonly Regex goEx = new Regex(@"^\s*go\s*$", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
-		public Database(string @namespace)
+		public Database(Type scriptType)
 		{
-			if (String.IsNullOrEmpty(@namespace))
-				throw new ArgumentNullException(nameof(@namespace));
+			if (scriptType == null)
+				throw new ArgumentNullException(nameof(scriptType));
 
-			createSql = ParseScript(ReadScript(@namespace, "create"));
-			clearSql = ParseScript(ReadScript(@namespace, "clear"));
+			ass = scriptType.Assembly;
+			createSql = ParseScript(ReadScript(scriptType.Namespace, "create"));
+			clearSql = ParseScript(ReadScript(scriptType.Namespace, "clear"));
 		}
 
 		string ReadScript(string @namespace, string name)
 		{
-			using (var str = Assembly.GetExecutingAssembly().GetManifestResourceStream(String.Format("{0}.{1}.sql", @namespace, name)))
+			using (var str = ass.GetManifestResourceStream(String.Format("{0}.{1}.sql", @namespace, name)))
 			{
 				using (var reader = new StreamReader(str))
 				{

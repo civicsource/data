@@ -17,7 +17,7 @@ install-package Archon.Data
 You should have a `create.sql` & a `clear.sql` as embedded resources in your class library. The `create.sql` script should only create tables & schemas and whatnot. It shouldn't try to create the database. The `clear.sql` script should simply clear the tables. Don't drop or create tables in the `clear.sql` script.
 
 ```cs
-var db = new Database(typeof(MyType).Namespace); //where MyType is in the same namespace as your create.sql & clear.sql
+var db = new Database(typeof(MyType)); //where MyType is in the same namespace as your create.sql & clear.sql
 ```
 
 ### Build a Database
