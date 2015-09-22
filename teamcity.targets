@@ -12,7 +12,7 @@
 
 		<major>0</major>
 		<minor>5</minor>
-		<patch>1</patch>
+		<patch>2</patch>
 
 		<version>$(major).$(minor).$(patch)</version>
 		<semver Condition="$(prerelease) == ''">$(major).$(minor).$(patch)+{build.number}</semver>

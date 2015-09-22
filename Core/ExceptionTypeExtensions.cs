@@ -10,7 +10,10 @@ namespace Archon.Data
 			if (ex == null)
 				return false;
 
-			return ex.Number == 2627;
+			if (ex.Message == null)
+				return false;
+
+			return ex.Message.Contains("duplicate key");
 		}
 	}
 }
