@@ -20,6 +20,12 @@ You should have a `create.sql` & a `clear.sql` as embedded resources in your cla
 var db = new Database(typeof(MyType)); //where MyType is in the same namespace as your create.sql & clear.sql
 ```
 
+or
+
+```cs
+var db = new Database(typeof(MyType).Assembly, "MyAssembly.Weird.Namespace.Folder1"); //specify what namespace the embedded create & clear sql scripts are in
+```
+
 ### Build a Database
 
 To build a new database using the `create.sql` script:

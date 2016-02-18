@@ -27,6 +27,19 @@ namespace Archon.Data
 			clearSql = ParseScript(ReadScript(scriptType.Namespace, "clear"));
 		}
 
+		public Database(Assembly scriptAss, string scriptNamespace)
+		{
+			if (scriptAss == null)
+				throw new ArgumentNullException(nameof(scriptAss));
+
+			if(String.IsNullOrWhiteSpace(scriptNamespace))
+				throw new ArgumentNullException(nameof(scriptNamespace));
+
+			ass = scriptAss;
+			createSql = ParseScript(ReadScript(scriptNamespace, "create"));
+			clearSql = ParseScript(ReadScript(scriptNamespace, "clear"));
+		}
+
 		string ReadScript(string @namespace, string name)
 		{
 			using (var str = ass.GetManifestResourceStream(String.Format("{0}.{1}.sql", @namespace, name)))
