@@ -66,6 +66,27 @@ db.Clear(myConn); //you can also pass a connection string here
 
 This will open the connection if it is not already open (or create a connection from the connection string) and then run the `clear.sql` script. This will fail if the database does not exist.
 
+### `DataContext`
+
+The `DataContext` class implements `IDbConnection` and provides an auto-opening transaction-tracking connection. It allows you to write code like this:
+
+```cs
+using(var conn = new DataContext(new SqlConnection("myconnectionString")))
+{
+	//no need to call conn.Open() here
+	using (var tx = conn.BeginTransaction())
+	{
+		using(var cmd = conn.CreateCommand())
+		{
+			//no need to call cmd.Transaction = tx
+			cmd.Execute(...);
+		}
+
+		tx.Commit();
+	}
+}
+```
+
 ## How to Build from Source
 
 Open in Visual Studio and build.
