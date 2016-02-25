@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using Dapper;
 
@@ -32,7 +33,7 @@ namespace Archon.Data
 			if (scriptAss == null)
 				throw new ArgumentNullException(nameof(scriptAss));
 
-			if(String.IsNullOrWhiteSpace(scriptNamespace))
+			if (String.IsNullOrWhiteSpace(scriptNamespace))
 				throw new ArgumentNullException(nameof(scriptNamespace));
 
 			ass = scriptAss;
@@ -42,8 +43,16 @@ namespace Archon.Data
 
 		string ReadScript(string @namespace, string name)
 		{
-			using (var str = ass.GetManifestResourceStream(String.Format("{0}.{1}.sql", @namespace, name)))
+			string resourceName = $"{@namespace}.{name}.sql";
+
+			using (var str = ass.GetManifestResourceStream(resourceName))
 			{
+				if (str == null)
+				{
+					string availableResources = ass.GetManifestResourceNames().Aggregate(new StringBuilder(), (sb, r) => sb.AppendLine(r)).ToString();
+					throw new DatabaseScriptException($"Could not find embedded resource '{resourceName}'. Available resources in assembly: {availableResources}");
+				}
+
 				using (var reader = new StreamReader(str))
 				{
 					return reader.ReadToEnd();
