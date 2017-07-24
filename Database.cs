@@ -23,7 +23,7 @@ namespace Archon.Data
 			if (scriptType == null)
 				throw new ArgumentNullException(nameof(scriptType));
 
-			ass = scriptType.Assembly;
+			ass = scriptType.GetTypeInfo().Assembly;
 			createSql = ParseScript(ReadScript(scriptType.Namespace, "create"));
 			clearSql = ParseScript(ReadScript(scriptType.Namespace, "clear"));
 		}

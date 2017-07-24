@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <AssemblyName>Archon.Data</AssemblyName>
+    <RootNamespace>Archon.Data</RootNamespace>
+    <Authors>Archon Information Systems, LLC</Authors>
+    <Company>Archon Information Systems, LLC</Company>
+    <Product>Archon Data Utilities</Product>
+    <Copyright>Copyright © 2015-2017 Archon Information Systems, LLC</Copyright>
+    <PackageLicenseUrl>https://github.com/civicsource/data/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/civicsource/data</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/civicsource/data.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Description>Utility classes to create databases and build schemas from sql scripts</Description>
+    <PackageReleaseNotes>https://github.com/civicsource/data/releases</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <TreatSpecificWarningsAsErrors />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="1.50.2" />
+    <PackageReference Include="System.Data.Common" Version="4.3.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.3.1" />
+  </ItemGroup>
+
+</Project>

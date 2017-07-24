@@ -4,10 +4,10 @@
 
 ## How to Use
 
-### Install via Nuget
+### Install
 
 ```
-install-package Archon.Data
+dotnet add package Archon.Data
 ```
 
 ### Create a Database Instance
@@ -74,7 +74,7 @@ using(var conn = new DataContext(new SqlConnection("myconnectionString")))
 	//no need to call conn.Open() here
 	using (var tx = conn.BeginTransaction())
 	{
-		using(var cmd = conn.CreateCommand())
+		using (var cmd = conn.CreateCommand())
 		{
 			//no need to call cmd.Transaction = tx
 			cmd.Execute(...);
@@ -85,6 +85,12 @@ using(var conn = new DataContext(new SqlConnection("myconnectionString")))
 }
 ```
 
-## How to Build from Source
+## Build from Source
 
-Open in Visual Studio and build.
+Clone this repo and run:
+
+```
+dotnet build
+```
+
+Or if you have Visual Studio, just open & build.
