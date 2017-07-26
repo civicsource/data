@@ -24,6 +24,16 @@ or
 var db = new Database(typeof(MyType).Assembly, "MyAssembly.Weird.Namespace.Folder1"); //specify what namespace the embedded create & clear sql scripts are in
 ```
 
+### Check if Database Exists
+
+To check if a database exists:
+
+```cs
+bool exists = db.Exists("server=.\\sqlexpress;database=mydb;integrated security=true;");
+```
+
+It will return `true` or `false` depending on if the database in the connection string exists or not.
+
 ### Build a Database
 
 To build a new database using the `create.sql` script:

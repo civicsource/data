@@ -65,6 +65,22 @@ namespace Archon.Data
 			return goEx.Split(script).Where(c => !goEx.IsMatch(c) && !String.IsNullOrWhiteSpace(c)).ToArray();
 		}
 
+		public bool Exists(string connectionString)
+		{
+			var builder = new SqlConnectionStringBuilder(connectionString);
+
+			string database = builder.InitialCatalog;
+			builder.InitialCatalog = "";
+
+			int count;
+			using (var conn = new SqlConnection(builder.ToString()))
+			{
+				count = conn.Query<int>("select count(*) from sysdatabases where [Name] = @database", new { database }).SingleOrDefault();
+			}
+
+			return count > 0;
+		}
+
 		public void Rebuild(string connectionString)
 		{
 			var builder = new SqlConnectionStringBuilder(connectionString);
