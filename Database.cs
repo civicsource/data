@@ -94,6 +94,11 @@ namespace Archon.Data
 
 		public void Rebuild()
 		{
+			Rebuild(null);
+		}
+
+		public void Rebuild(Func<string, string> modifyScript)
+		{
 			var builder = new SqlConnectionStringBuilder(connectionString);
 
 			string database = builder.InitialCatalog;
@@ -110,10 +115,15 @@ namespace Archon.Data
 				));
 			}
 
-			Build();
+			Build(modifyScript);
 		}
 
 		public void Build()
+		{
+			Build(null);
+		}
+
+		public void Build(Func<string, string> modifyScript)
 		{
 			var builder = new SqlConnectionStringBuilder(connectionString);
 
@@ -127,36 +137,67 @@ namespace Archon.Data
 
 			using (var conn = new SqlConnection(connectionString))
 			{
-				BuildSchema(conn);
+				BuildSchema(conn, modifyScript);
 			}
 		}
 
 		public void BuildSchema(IDbConnection conn)
 		{
+			BuildSchema(conn, null);
+		}
+
+		public void BuildSchema(IDbConnection conn, Func<string, string> modifyScript)
+		{
 			conn.EnsureOpen();
 
 			foreach (string statement in createSql)
-				conn.Execute(statement);
+				ExecuteScript(conn, statement, modifyScript);
 		}
 
 		public void Clear()
 		{
+			Clear((Func<string, string>)null);
+		}
+
+		public void Clear(Func<string, string> modifyScript)
+		{
 			using (var conn = new SqlConnection(connectionString))
 			{
-				Clear(conn);
+				Clear(conn, modifyScript);
 			}
 		}
 
 		public void Clear(IDbConnection conn)
+		{
+			Clear(conn, null);
+		}
+
+		public void Clear(IDbConnection conn, Func<string, string> modifyScript)
 		{
 			conn.EnsureOpen();
 
 			using (var tx = conn.BeginTransaction())
 			{
 				foreach (string statement in clearSql)
-					conn.Execute(statement, transaction: tx);
+					ExecuteScript(conn, statement, modifyScript, tx);
 
 				tx.Commit();
+			}
+		}
+
+		void ExecuteScript(IDbConnection conn, string sql, Func<string, string> modify, IDbTransaction tx = null)
+		{
+			if (modify != null)
+			{
+				string newStatement = modify(sql);
+				if (!String.IsNullOrWhiteSpace(newStatement))
+				{
+					conn.Execute(newStatement, transaction: tx);
+				}
+			}
+			else
+			{
+				conn.Execute(sql, transaction: tx);
 			}
 		}
 	}

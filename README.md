@@ -44,7 +44,13 @@ To build a new database using the `create.sql` script:
 db.Build();
 ```
 
-This will create the database if it doesn't already exist and then run the `create.sql` script against it.
+This will create the database if it doesn't already exist and then run the `create.sql` script against it. You can also use the overload which takes a `modifyScript` delegate to modify each script before it is executed (e.g. to replace tokens based on environment):
+
+```cs
+db.Build(sql => sql.Replace("{schema_name}", Thread.CurrentThread.Name));
+```
+
+Note: if the delegate returns `null` for a particular script, that script will not be run.
 
 ### Rebuild a Database
 
@@ -54,7 +60,7 @@ To drop an existing database and recreate it using the `create.sql` script:
 db.Rebuild();
 ```
 
-This will drop the database if it exists and then recreate it running the `create.sql` script against it.
+This will drop the database if it exists and then recreate it running the `create.sql` script against it. This method also has an overload which accepts a a `modifyScript` delegate.
 
 ### Build the Schema Only
 
@@ -64,7 +70,7 @@ To only run the `create.sql` script with an existing `IDbConnection`:
 db.BuildSchema(myConn);
 ```
 
-The connection will be opened if it is not already opened and then the `create.sql` script will be run.
+The connection will be opened if it is not already opened and then the `create.sql` script will be run. This method also has an overload which accepts a a `modifyScript` delegate.
 
 ### Clear the Database
 
@@ -74,7 +80,7 @@ To run the `clear.sql` against an existing database:
 db.Clear(myConn); //you can also not pass a connection object to run against the original connection string
 ```
 
-This will open the connection if it is not already open (or create a connection from the connection string) and then run the `clear.sql` script. This will fail if the database does not exist.
+This will open the connection if it is not already open (or create a connection from the connection string) and then run the `clear.sql` script. This will fail if the database does not exist. This method also has an overload which accepts a a `modifyScript` delegate.
 
 ### `DataContext`
 
