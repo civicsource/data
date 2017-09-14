@@ -14,28 +14,39 @@ namespace Archon.Data
 	{
 		static readonly Regex goEx = new Regex(@"^\s*go\s*$", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
+		readonly string connectionString;
 		readonly Assembly ass;
 		readonly string[] createSql;
 		readonly string[] clearSql;
 
-		public Database(Type scriptType)
+		public string ConnectionString => connectionString;
+
+		public Database(string connectionString, Type scriptType)
 		{
+			if (String.IsNullOrWhiteSpace(connectionString))
+				throw new ArgumentNullException(nameof(connectionString));
+
 			if (scriptType == null)
 				throw new ArgumentNullException(nameof(scriptType));
 
+			this.connectionString = connectionString;
 			ass = scriptType.GetTypeInfo().Assembly;
 			createSql = ParseScript(ReadScript(scriptType.Namespace, "create"));
 			clearSql = ParseScript(ReadScript(scriptType.Namespace, "clear"));
 		}
 
-		public Database(Assembly scriptAss, string scriptNamespace)
+		public Database(string connectionString, Assembly scriptAss, string scriptNamespace)
 		{
+			if (String.IsNullOrWhiteSpace(connectionString))
+				throw new ArgumentNullException(nameof(connectionString));
+
 			if (scriptAss == null)
 				throw new ArgumentNullException(nameof(scriptAss));
 
 			if (String.IsNullOrWhiteSpace(scriptNamespace))
 				throw new ArgumentNullException(nameof(scriptNamespace));
 
+			this.connectionString = connectionString;
 			ass = scriptAss;
 			createSql = ParseScript(ReadScript(scriptNamespace, "create"));
 			clearSql = ParseScript(ReadScript(scriptNamespace, "clear"));
@@ -65,7 +76,7 @@ namespace Archon.Data
 			return goEx.Split(script).Where(c => !goEx.IsMatch(c) && !String.IsNullOrWhiteSpace(c)).ToArray();
 		}
 
-		public bool Exists(string connectionString)
+		public bool Exists()
 		{
 			var builder = new SqlConnectionStringBuilder(connectionString);
 
@@ -81,7 +92,7 @@ namespace Archon.Data
 			return count > 0;
 		}
 
-		public void Rebuild(string connectionString)
+		public void Rebuild()
 		{
 			var builder = new SqlConnectionStringBuilder(connectionString);
 
@@ -99,10 +110,10 @@ namespace Archon.Data
 				));
 			}
 
-			Build(connectionString);
+			Build();
 		}
 
-		public void Build(string connectionString)
+		public void Build()
 		{
 			var builder = new SqlConnectionStringBuilder(connectionString);
 
@@ -128,7 +139,7 @@ namespace Archon.Data
 				conn.Execute(statement);
 		}
 
-		public void Clear(string connectionString)
+		public void Clear()
 		{
 			using (var conn = new SqlConnection(connectionString))
 			{
