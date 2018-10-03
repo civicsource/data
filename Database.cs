@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Dapper;
 
 namespace Archon.Data
@@ -76,7 +78,7 @@ namespace Archon.Data
 			return goEx.Split(script).Where(c => !goEx.IsMatch(c) && !String.IsNullOrWhiteSpace(c)).ToArray();
 		}
 
-		public bool Exists()
+		public async Task<bool> ExistsAsync()
 		{
 			var builder = new SqlConnectionStringBuilder(connectionString);
 
@@ -86,18 +88,15 @@ namespace Archon.Data
 			int count;
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
-				count = conn.Query<int>("select count(*) from sysdatabases where [Name] = @database", new { database }).SingleOrDefault();
+				count = (await conn.QueryAsync<int>("select count(*) from sysdatabases where [Name] = @database", new { database })).SingleOrDefault();
 			}
 
 			return count > 0;
 		}
 
-		public void Rebuild()
-		{
-			Rebuild(null);
-		}
+		public Task RebuildAsync() => RebuildAsync(null);
 
-		public void Rebuild(Func<string, string> modifyScript)
+		public async Task RebuildAsync(Func<string, string> modifyScript)
 		{
 			var builder = new SqlConnectionStringBuilder(connectionString);
 
@@ -106,24 +105,21 @@ namespace Archon.Data
 
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
-				conn.Execute(String.Format(@"
-					if db_id('{0}') is not null
+				await conn.ExecuteAsync($@"
+					if db_id('{database}') is not null
 					begin
-						alter database {0} set single_user with rollback immediate;
-						drop database {0};
-					end", database
-				));
+						alter database {database} set single_user with rollback immediate;
+						drop database {database};
+					end"
+				);
 			}
 
-			Build(modifyScript);
+			await BuildAsync(modifyScript);
 		}
 
-		public void Build()
-		{
-			Build(null);
-		}
+		public Task BuildAsync() => BuildAsync(null);
 
-		public void Build(Func<string, string> modifyScript)
+		public async Task BuildAsync(Func<string, string> modifyScript)
 		{
 			var builder = new SqlConnectionStringBuilder(connectionString);
 
@@ -132,72 +128,63 @@ namespace Archon.Data
 
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
-				conn.Execute(String.Format("if db_id('{0}') is null create database {0}", database));
+				await conn.ExecuteAsync($"if db_id('{database}') is null create database {database}");
 			}
 
 			using (var conn = new SqlConnection(connectionString))
 			{
-				BuildSchema(conn, modifyScript);
+				await BuildSchemaAsync(conn, modifyScript);
 			}
 		}
 
-		public void BuildSchema(IDbConnection conn)
-		{
-			BuildSchema(conn, null);
-		}
+		public Task BuildSchemaAsync(DbConnection conn) => BuildSchemaAsync(conn, null);
 
-		public void BuildSchema(IDbConnection conn, Func<string, string> modifyScript)
+		public async Task BuildSchemaAsync(DbConnection conn, Func<string, string> modifyScript)
 		{
-			conn.EnsureOpen();
+			await conn.EnsureOpenAsync();
 
 			foreach (string statement in createSql)
-				ExecuteScript(conn, statement, modifyScript);
+				await ExecuteScriptAsync(conn, statement, modifyScript);
 		}
 
-		public void Clear()
-		{
-			Clear((Func<string, string>)null);
-		}
+		public Task ClearAsync() => ClearAsync((Func<string, string>)null);
 
-		public void Clear(Func<string, string> modifyScript)
+		public async Task ClearAsync(Func<string, string> modifyScript)
 		{
 			using (var conn = new SqlConnection(connectionString))
 			{
-				Clear(conn, modifyScript);
+				await ClearAsync(conn, modifyScript);
 			}
 		}
 
-		public void Clear(IDbConnection conn)
-		{
-			Clear(conn, null);
-		}
+		public Task ClearAsync(DbConnection conn) => ClearAsync(conn, null);
 
-		public void Clear(IDbConnection conn, Func<string, string> modifyScript)
+		public async Task ClearAsync(DbConnection conn, Func<string, string> modifyScript)
 		{
-			conn.EnsureOpen();
+			await conn.EnsureOpenAsync();
 
 			using (var tx = conn.BeginTransaction())
 			{
 				foreach (string statement in clearSql)
-					ExecuteScript(conn, statement, modifyScript, tx);
+					await ExecuteScriptAsync(conn, statement, modifyScript, tx);
 
 				tx.Commit();
 			}
 		}
 
-		void ExecuteScript(IDbConnection conn, string sql, Func<string, string> modify, IDbTransaction tx = null)
+		async Task ExecuteScriptAsync(DbConnection conn, string sql, Func<string, string> modify, IDbTransaction tx = null)
 		{
 			if (modify != null)
 			{
 				string newStatement = modify(sql);
 				if (!String.IsNullOrWhiteSpace(newStatement))
 				{
-					conn.Execute(newStatement, transaction: tx);
+					await conn.ExecuteAsync(newStatement, transaction: tx);
 				}
 			}
 			else
 			{
-				conn.Execute(sql, transaction: tx);
+				await conn.ExecuteAsync(sql, transaction: tx);
 			}
 		}
 	}

@@ -31,7 +31,7 @@ var db = new Database(connectionString, typeof(MyType).Assembly, "MyAssembly.Wei
 To check if a database exists:
 
 ```cs
-bool exists = db.Exists();
+bool exists = await db.ExistsAsync();
 ```
 
 It will return `true` or `false` depending on if the database in the connection string exists or not.
@@ -41,13 +41,13 @@ It will return `true` or `false` depending on if the database in the connection 
 To build a new database using the `create.sql` script:
 
 ```cs
-db.Build();
+await db.BuildAsync();
 ```
 
 This will create the database if it doesn't already exist and then run the `create.sql` script against it. You can also use the overload which takes a `modifyScript` delegate to modify each script before it is executed (e.g. to replace tokens based on environment):
 
 ```cs
-db.Build(sql => sql.Replace("{schema_name}", Thread.CurrentThread.Name));
+await db.BuildAsync(sql => sql.Replace("{schema_name}", Thread.CurrentThread.Name));
 ```
 
 Note: if the delegate returns `null` for a particular script, that script will not be run.
@@ -57,7 +57,7 @@ Note: if the delegate returns `null` for a particular script, that script will n
 To drop an existing database and recreate it using the `create.sql` script:
 
 ```cs
-db.Rebuild();
+await db.RebuildAsync();
 ```
 
 This will drop the database if it exists and then recreate it running the `create.sql` script against it. This method also has an overload which accepts a a `modifyScript` delegate.
@@ -67,7 +67,7 @@ This will drop the database if it exists and then recreate it running the `creat
 To only run the `create.sql` script with an existing `IDbConnection`:
 
 ```cs
-db.BuildSchema(myConn);
+await db.BuildSchemaAsync(myConn);
 ```
 
 The connection will be opened if it is not already opened and then the `create.sql` script will be run. This method also has an overload which accepts a a `modifyScript` delegate.
@@ -77,14 +77,14 @@ The connection will be opened if it is not already opened and then the `create.s
 To run the `clear.sql` against an existing database:
 
 ```cs
-db.Clear(myConn); //you can also not pass a connection object to run against the original connection string
+await db.ClearAsync(myConn); //you can also not pass a connection object to run against the original connection string
 ```
 
 This will open the connection if it is not already open (or create a connection from the connection string) and then run the `clear.sql` script. This will fail if the database does not exist. This method also has an overload which accepts a a `modifyScript` delegate.
 
 ### `DataContext`
 
-The `DataContext` class implements `IDbConnection` and provides an auto-opening transaction-tracking connection. It allows you to write code like this:
+The `DataContext` class inherits from `DbConnection` (and consequently implements `IDbConnection`) and provides an auto-opening transaction-tracking connection. It allows you to write code like this:
 
 ```cs
 using(var conn = new DataContext(new SqlConnection("myconnectionString")))
@@ -95,7 +95,7 @@ using(var conn = new DataContext(new SqlConnection("myconnectionString")))
 		using (var cmd = conn.CreateCommand())
 		{
 			//no need to call cmd.Transaction = tx
-			cmd.Execute(...);
+			await cmd.ExecuteAsync(...);
 		}
 
 		tx.Commit();

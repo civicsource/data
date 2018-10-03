@@ -1,84 +1,58 @@
 ﻿using System.Data;
+using System.Data.Common;
 
 namespace Archon.Data
 {
-	public class DataContext : IDbConnection
+	public class DataContext : DbConnection
 	{
-		readonly IDbConnection inner;
-		IDbTransaction currentTx;
+		readonly DbConnection inner;
 
-		public IDbTransaction CurrentTransaction
-		{
-			get { return currentTx; }
-		}
+		public DbTransaction CurrentTransaction { get; private set; }
 
-		public DataContext(IDbConnection inner)
+		public DataContext(DbConnection inner)
 		{
 			this.inner = inner;
 		}
 
-		public IDbTransaction BeginTransaction()
+		protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
 		{
 			inner.EnsureOpen();
-			currentTx = inner.BeginTransaction();
-			return currentTx;
+			CurrentTransaction = inner.BeginTransaction(isolationLevel);
+			return CurrentTransaction;
 		}
 
-		public IDbTransaction BeginTransaction(IsolationLevel il)
-		{
-			inner.EnsureOpen();
-			currentTx = inner.BeginTransaction(il);
-			return currentTx;
-		}
-
-		public IDbCommand CreateCommand()
+		protected override DbCommand CreateDbCommand()
 		{
 			var cmd = inner.CreateCommand();
-			cmd.Transaction = currentTx;
+			cmd.Transaction = CurrentTransaction;
 			return cmd;
 		}
 
 		#region Decorated
 
-		public string ConnectionString
+		public override string ConnectionString
 		{
-			get { return inner.ConnectionString; }
-			set { inner.ConnectionString = value; }
+			get => inner.ConnectionString;
+			set => inner.ConnectionString = value;
 		}
 
-		public int ConnectionTimeout
-		{
-			get { return inner.ConnectionTimeout; }
-		}
+		public override string Database => inner.Database;
+		public override string DataSource => inner.DataSource;
+		public override string ServerVersion => inner.ServerVersion;
+		public override ConnectionState State => inner.State;
 
-		public string Database
-		{
-			get { return inner.Database; }
-		}
-
-		public ConnectionState State
-		{
-			get { return inner.State; }
-		}
-
-		public void ChangeDatabase(string databaseName)
+		public override void ChangeDatabase(string databaseName)
 		{
 			inner.ChangeDatabase(databaseName);
 		}
-
-		public void Close()
-		{
-			inner.Close();
-		}
-
-		public void Dispose()
-		{
-			inner.Dispose();
-		}
-
-		public void Open()
+		public override void Open()
 		{
 			inner.Open();
+		}
+
+		public override void Close()
+		{
+			inner.Close();
 		}
 
 		#endregion
