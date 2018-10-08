@@ -28,6 +28,11 @@ namespace Archon.Data
 			return cmd;
 		}
 
+		protected override void Dispose(bool disposing)
+		{
+			inner?.Dispose();
+		}
+
 		#region Decorated
 
 		public override string ConnectionString
