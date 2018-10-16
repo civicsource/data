@@ -1,63 +1,63 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.Common;
 
 namespace Archon.Data
 {
 	public class DataContext : DbConnection
 	{
-		readonly DbConnection inner;
-
+		public DbConnection InnerConnection { get; }
 		public DbTransaction CurrentTransaction { get; private set; }
 
 		public DataContext(DbConnection inner)
 		{
-			this.inner = inner;
+			InnerConnection = inner ?? throw new ArgumentNullException(nameof(inner));
 		}
 
 		protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
 		{
-			inner.EnsureOpen();
-			CurrentTransaction = inner.BeginTransaction(isolationLevel);
+			InnerConnection.EnsureOpen();
+			CurrentTransaction = InnerConnection.BeginTransaction(isolationLevel);
 			return CurrentTransaction;
 		}
 
 		protected override DbCommand CreateDbCommand()
 		{
-			var cmd = inner.CreateCommand();
+			var cmd = InnerConnection.CreateCommand();
 			cmd.Transaction = CurrentTransaction;
 			return cmd;
 		}
 
 		protected override void Dispose(bool disposing)
 		{
-			inner?.Dispose();
+			InnerConnection?.Dispose();
 		}
 
 		#region Decorated
 
 		public override string ConnectionString
 		{
-			get => inner.ConnectionString;
-			set => inner.ConnectionString = value;
+			get => InnerConnection.ConnectionString;
+			set => InnerConnection.ConnectionString = value;
 		}
 
-		public override string Database => inner.Database;
-		public override string DataSource => inner.DataSource;
-		public override string ServerVersion => inner.ServerVersion;
-		public override ConnectionState State => inner.State;
+		public override string Database => InnerConnection.Database;
+		public override string DataSource => InnerConnection.DataSource;
+		public override string ServerVersion => InnerConnection.ServerVersion;
+		public override ConnectionState State => InnerConnection.State;
 
 		public override void ChangeDatabase(string databaseName)
 		{
-			inner.ChangeDatabase(databaseName);
+			InnerConnection.ChangeDatabase(databaseName);
 		}
 		public override void Open()
 		{
-			inner.Open();
+			InnerConnection.Open();
 		}
 
 		public override void Close()
 		{
-			inner.Close();
+			InnerConnection.Close();
 		}
 
 		#endregion
