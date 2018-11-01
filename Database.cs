@@ -90,7 +90,8 @@ namespace Archon.Data
 
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
-				return await conn.QuerySingleOrDefaultAsync<int>("SELECT COUNT(*) FROM sys.sysdatabases WHERE [Name] = @database", new { database }, commandTimeout: commandTimeout) > 0;
+				return await conn.ExecuteScalarAsync<bool>("SELECT TOP 1 1 FROM sys.sysdatabases WHERE [Name] = @database", new { database },
+					commandTimeout: commandTimeout);
 			}
 		}
 
