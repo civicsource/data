@@ -90,7 +90,7 @@ namespace Archon.Data
 
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
-				return await conn.QuerySingleOrDefaultAsync<int>("select count(*) from sysdatabases where [Name] = @database", new { database }, commandTimeout: commandTimeout) > 0;
+				return await conn.QuerySingleOrDefaultAsync<int>("SELECT COUNT(*) FROM sys.sysdatabases WHERE [Name] = @database", new { database }, commandTimeout: commandTimeout) > 0;
 			}
 		}
 
@@ -106,11 +106,11 @@ namespace Archon.Data
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
 				await conn.ExecuteAsync($@"
-					if db_id('{database}') is not null
-					begin
-						alter database [{database}] set single_user with rollback immediate;
-						drop database [{database}];
-					end",
+					IF EXISTS (SELECT 1 FROM sys.sysdatabases WHERE name = '{database}')
+					BEGIN
+						ALTER DATABASE [{database}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+						DROP DATABASE [{database}];
+					END",
 					commandTimeout: commandTimeout
 				);
 			}
@@ -129,7 +129,7 @@ namespace Archon.Data
 
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
-				await conn.ExecuteAsync($"if db_id('{database}') is null create database [{database}]", commandTimeout: commandTimeout);
+				await conn.ExecuteAsync($"IF EXISTS (SELECT 1 FROM sys.sysdatabases WHERE name = '{database}') CREATE DATABASE [{database}]", commandTimeout: commandTimeout);
 			}
 
 			using (var conn = new SqlConnection(connectionString))
