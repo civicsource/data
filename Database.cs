@@ -108,8 +108,8 @@ namespace Archon.Data
 				await conn.ExecuteAsync($@"
 					if db_id('{database}') is not null
 					begin
-						alter database {database} set single_user with rollback immediate;
-						drop database {database};
+						alter database [{database}] set single_user with rollback immediate;
+						drop database [{database}];
 					end"
 				);
 			}
@@ -128,7 +128,7 @@ namespace Archon.Data
 
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
-				await conn.ExecuteAsync($"if db_id('{database}') is null create database {database}");
+				await conn.ExecuteAsync($"if db_id('{database}') is null create database [{database}]");
 			}
 
 			using (var conn = new SqlConnection(connectionString))
