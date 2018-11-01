@@ -16,14 +16,15 @@ namespace Archon.Data
 	{
 		static readonly Regex goEx = new Regex(@"^\s*go\s*$", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
-		readonly string connectionString;
-		readonly Assembly ass;
-		readonly string[] createSql;
-		readonly string[] clearSql;
+		private readonly string connectionString;
+		private readonly int? commandTimeout;
+		private readonly Assembly ass;
+		private readonly string[] createSql;
+		private readonly string[] clearSql;
 
 		public string ConnectionString => connectionString;
 
-		public Database(string connectionString, Type scriptType)
+		public Database(string connectionString, Type scriptType, int? commandTimeout = null)
 		{
 			if (String.IsNullOrWhiteSpace(connectionString))
 				throw new ArgumentNullException(nameof(connectionString));
@@ -32,12 +33,13 @@ namespace Archon.Data
 				throw new ArgumentNullException(nameof(scriptType));
 
 			this.connectionString = connectionString;
+			this.commandTimeout = commandTimeout;
 			ass = scriptType.GetTypeInfo().Assembly;
 			createSql = ParseScript(ReadScript(scriptType.Namespace, "create"));
 			clearSql = ParseScript(ReadScript(scriptType.Namespace, "clear"));
 		}
 
-		public Database(string connectionString, Assembly scriptAss, string scriptNamespace)
+		public Database(string connectionString, Assembly scriptAss, string scriptNamespace, int? commandTimeout = null)
 		{
 			if (String.IsNullOrWhiteSpace(connectionString))
 				throw new ArgumentNullException(nameof(connectionString));
@@ -50,6 +52,7 @@ namespace Archon.Data
 
 			this.connectionString = connectionString;
 			ass = scriptAss;
+			this.commandTimeout = commandTimeout;
 			createSql = ParseScript(ReadScript(scriptNamespace, "create"));
 			clearSql = ParseScript(ReadScript(scriptNamespace, "clear"));
 		}
@@ -85,13 +88,10 @@ namespace Archon.Data
 			string database = builder.InitialCatalog;
 			builder.InitialCatalog = "";
 
-			int count;
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
-				count = (await conn.QueryAsync<int>("select count(*) from sysdatabases where [Name] = @database", new { database })).SingleOrDefault();
+				return await conn.QuerySingleOrDefaultAsync<int>("select count(*) from sysdatabases where [Name] = @database", new { database }, commandTimeout: commandTimeout) > 0;
 			}
-
-			return count > 0;
 		}
 
 		public Task RebuildAsync() => RebuildAsync(null);
@@ -110,7 +110,8 @@ namespace Archon.Data
 					begin
 						alter database [{database}] set single_user with rollback immediate;
 						drop database [{database}];
-					end"
+					end",
+					commandTimeout: commandTimeout
 				);
 			}
 
@@ -128,7 +129,7 @@ namespace Archon.Data
 
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
-				await conn.ExecuteAsync($"if db_id('{database}') is null create database [{database}]");
+				await conn.ExecuteAsync($"if db_id('{database}') is null create database [{database}]", commandTimeout: commandTimeout);
 			}
 
 			using (var conn = new SqlConnection(connectionString))
@@ -179,12 +180,12 @@ namespace Archon.Data
 				string newStatement = modify(sql);
 				if (!String.IsNullOrWhiteSpace(newStatement))
 				{
-					await conn.ExecuteAsync(newStatement, transaction: tx);
+					await conn.ExecuteAsync(newStatement, transaction: tx, commandTimeout: commandTimeout);
 				}
 			}
 			else
 			{
-				await conn.ExecuteAsync(sql, transaction: tx);
+				await conn.ExecuteAsync(sql, transaction: tx, commandTimeout: commandTimeout);
 			}
 		}
 	}
