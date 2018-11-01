@@ -130,7 +130,7 @@ namespace Archon.Data
 
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
-				await conn.ExecuteAsync($"IF EXISTS (SELECT 1 FROM sys.sysdatabases WHERE name = '{database}') CREATE DATABASE [{database}]", commandTimeout: commandTimeout);
+				await conn.ExecuteAsync($"IF NOT EXISTS (SELECT 1 FROM sys.sysdatabases WHERE name = '{database}') CREATE DATABASE [{database}]", commandTimeout: commandTimeout);
 			}
 
 			using (var conn = new SqlConnection(connectionString))
