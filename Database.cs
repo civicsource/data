@@ -106,14 +106,21 @@ namespace Archon.Data
 
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
-				await conn.ExecuteAsync($@"
-					IF EXISTS (SELECT 1 FROM sys.sysdatabases WHERE name = '{database}')
-					BEGIN
-						ALTER DATABASE [{database}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-						DROP DATABASE [{database}];
-					END",
-					commandTimeout: commandTimeout
-				);
+				bool isAzure = await conn.ExecuteScalarAsync<bool>("SELECT CASE WHEN SERVERPROPERTY ('edition') = N'SQL Azure' THEN 1 END", commandTimeout: commandTimeout);
+
+				if (isAzure)
+				{
+					await conn.ExecuteAsync($@"DROP DATABASE IF EXISTS [{database}]", commandTimeout: commandTimeout);
+				}
+				else
+				{
+					await conn.ExecuteAsync($@"
+						IF EXISTS (SELECT 1 FROM sys.sysdatabases WHERE name = '{database}')
+						BEGIN
+							ALTER DATABASE [{database}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+							DROP DATABASE [{database}];
+						END", commandTimeout: commandTimeout);
+				}
 			}
 
 			await BuildAsync(modifyScript);
