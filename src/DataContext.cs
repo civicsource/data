@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Archon.Data
 {
@@ -16,7 +18,7 @@ namespace Archon.Data
 
 		protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
 		{
-			InnerConnection.EnsureOpen();
+			this.EnsureOpen();
 			CurrentTransaction = InnerConnection.BeginTransaction(isolationLevel);
 			return CurrentTransaction;
 		}
@@ -41,24 +43,23 @@ namespace Archon.Data
 			set => InnerConnection.ConnectionString = value;
 		}
 
+		public override event StateChangeEventHandler StateChange
+		{
+			add { InnerConnection.StateChange += value; }
+			remove { InnerConnection.StateChange -= value; }
+		}
+
 		public override string Database => InnerConnection.Database;
 		public override string DataSource => InnerConnection.DataSource;
 		public override string ServerVersion => InnerConnection.ServerVersion;
 		public override ConnectionState State => InnerConnection.State;
+		public override int ConnectionTimeout => InnerConnection.ConnectionTimeout;
 
-		public override void ChangeDatabase(string databaseName)
-		{
-			InnerConnection.ChangeDatabase(databaseName);
-		}
-		public override void Open()
-		{
-			InnerConnection.Open();
-		}
+		public override void ChangeDatabase(string databaseName) => InnerConnection.ChangeDatabase(databaseName);
 
-		public override void Close()
-		{
-			InnerConnection.Close();
-		}
+		public override void Open() => InnerConnection.Open();
+		public override Task OpenAsync(CancellationToken cancellationToken) => InnerConnection.OpenAsync(cancellationToken);
+		public override void Close() => InnerConnection.Close();
 
 		#endregion
 	}
