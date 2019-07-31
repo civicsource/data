@@ -106,7 +106,7 @@ namespace Archon.Data
 
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
-				bool isAzure = await conn.ExecuteScalarAsync<bool>("SELECT CASE WHEN SERVERPROPERTY ('edition') = N'SQL Azure' THEN 1 END", commandTimeout: commandTimeout);
+				bool isAzure = await IsAzure(conn);
 
 				if (isAzure)
 				{
@@ -135,9 +135,19 @@ namespace Archon.Data
 			string database = builder.InitialCatalog;
 			builder.InitialCatalog = "";
 
+			bool isAzure = false;
 			using (var conn = new SqlConnection(builder.ToString()))
 			{
+				isAzure = await IsAzure(conn);
+
 				await conn.ExecuteAsync($"IF NOT EXISTS (SELECT 1 FROM sys.sysdatabases WHERE name = '{database}') CREATE DATABASE [{database}]", commandTimeout: commandTimeout);
+			}
+
+			if (isAzure)
+			{
+				// wait for the "azure juices" to settle after creating the database
+				// the newly created database is not always immediately available to connect to
+				await Task.Delay(2000);
 			}
 
 			using (var conn = new SqlConnection(connectionString))
@@ -196,5 +206,7 @@ namespace Archon.Data
 				await conn.ExecuteAsync(sql, transaction: tx, commandTimeout: commandTimeout);
 			}
 		}
+
+		Task<bool> IsAzure(DbConnection conn) => conn.ExecuteScalarAsync<bool>("SELECT CASE WHEN SERVERPROPERTY ('edition') = N'SQL Azure' THEN 1 END", commandTimeout: commandTimeout);
 	}
 }
