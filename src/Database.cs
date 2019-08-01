@@ -99,30 +99,7 @@ namespace Archon.Data
 
 		public async Task RebuildAsync(Func<string, string> modifyScript)
 		{
-			var builder = new SqlConnectionStringBuilder(connectionString);
-
-			string database = builder.InitialCatalog;
-			builder.InitialCatalog = "";
-
-			using (var conn = new SqlConnection(builder.ToString()))
-			{
-				bool isAzure = await IsAzure(conn);
-
-				if (isAzure)
-				{
-					await conn.ExecuteAsync($@"DROP DATABASE IF EXISTS [{database}]", commandTimeout: commandTimeout);
-				}
-				else
-				{
-					await conn.ExecuteAsync($@"
-						IF EXISTS (SELECT 1 FROM sys.sysdatabases WHERE name = '{database}')
-						BEGIN
-							ALTER DATABASE [{database}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-							DROP DATABASE [{database}];
-						END", commandTimeout: commandTimeout);
-				}
-			}
-
+			await DropAsync();
 			await BuildAsync(modifyScript);
 		}
 
@@ -188,6 +165,33 @@ namespace Archon.Data
 					await ExecuteScriptAsync(conn, statement, modifyScript, tx);
 
 				tx.Commit();
+			}
+		}
+
+		public async Task DropAsync()
+		{
+			var builder = new SqlConnectionStringBuilder(connectionString);
+
+			string database = builder.InitialCatalog;
+			builder.InitialCatalog = "";
+
+			using (var conn = new SqlConnection(builder.ToString()))
+			{
+				bool isAzure = await IsAzure(conn);
+
+				if (isAzure)
+				{
+					await conn.ExecuteAsync($@"DROP DATABASE IF EXISTS [{database}]", commandTimeout: commandTimeout);
+				}
+				else
+				{
+					await conn.ExecuteAsync($@"
+						IF EXISTS (SELECT 1 FROM sys.sysdatabases WHERE name = '{database}')
+						BEGIN
+							ALTER DATABASE [{database}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+							DROP DATABASE [{database}];
+						END", commandTimeout: commandTimeout);
+				}
 			}
 		}
 

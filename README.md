@@ -62,6 +62,17 @@ await db.RebuildAsync();
 
 This will drop the database if it exists and then recreate it running the `create.sql` script against it. This method also has an overload which accepts a a `modifyScript` delegate.
 
+### Drop a Database
+
+To drop an existing database:
+
+```cs
+await db.DropAsync();
+```
+
+This will drop the database if it exists.
+
+
 ### Build the Schema Only
 
 To only run the `create.sql` script with an existing `IDbConnection`:
